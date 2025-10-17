@@ -1,13 +1,11 @@
-
 import React from 'react';
-import { HistoryIcon, RotorIcon, SettingsIcon } from './icons';
+import { HistoryIcon, RotorIcon } from './icons';
 
 interface HeaderProps {
     onToggleHistory: () => void;
-    onOpenSettings: () => void;
 }
 
-export const Header: React.FC<HeaderProps> = ({ onToggleHistory, onOpenSettings }) => {
+export const Header: React.FC<HeaderProps> = ({ onToggleHistory }) => {
     return (
         <header className="flex-shrink-0 flex items-center justify-between p-4 md:p-6 border-b border-brand-border">
             <div className="flex items-center gap-3">
@@ -15,13 +13,6 @@ export const Header: React.FC<HeaderProps> = ({ onToggleHistory, onOpenSettings 
                 <h1 className="text-xl font-bold text-brand-text-primary">RotorWise AI</h1>
             </div>
             <div className="flex items-center gap-2">
-                <button
-                    onClick={onOpenSettings}
-                    className="p-2 rounded-md hover:bg-brand-surface-hover focus:outline-none focus:ring-2 focus:ring-brand-accent"
-                    aria-label="API Key Settings"
-                >
-                    <SettingsIcon className="w-6 h-6" />
-                </button>
                 <button
                     onClick={onToggleHistory}
                     className="lg:hidden p-2 rounded-md hover:bg-brand-surface-hover focus:outline-none focus:ring-2 focus:ring-brand-accent"

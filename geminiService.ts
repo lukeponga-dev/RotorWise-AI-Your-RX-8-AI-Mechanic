@@ -1,4 +1,3 @@
-// Fix: Use GenerateContentParameters instead of deprecated GenerateContentRequest.
 import { GoogleGenAI, Type, GenerateContentParameters } from "@google/genai";
 import type { DiagnosticReport } from '../types';
 
@@ -83,11 +82,10 @@ const responseSchema = {
 export const getDiagnostics = async (
     userInput: string,
     vin: string,
-    files: { base64: string, mimeType: string }[],
-    apiKey: string
+    files: { base64: string, mimeType: string }[]
 ): Promise<DiagnosticReport> => {
     
-    const ai = new GoogleGenAI({ apiKey });
+    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
 
     const systemInstruction = `You are "RotorWise AI", an expert automotive diagnostic assistant for all types of vehicles. Your goal is to provide a comprehensive, accurate, and safe diagnostic report based on user-provided information.
     
@@ -123,7 +121,6 @@ export const getDiagnostics = async (
         },
     }));
 
-    // Fix: Use GenerateContentParameters instead of deprecated GenerateContentRequest.
     const contents: GenerateContentParameters['contents'] = {
         parts: [{ text: prompt }, ...imageParts]
     };

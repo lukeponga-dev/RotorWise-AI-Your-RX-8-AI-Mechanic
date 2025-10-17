@@ -7,15 +7,12 @@ import { ReportDisplay } from './components/ReportDisplay';
 import { HistoryPanel } from './components/HistoryPanel';
 import { UserMessage } from './components/UserMessage';
 import { AIMessage } from './components/AIMessage';
-import { ApiKeyPromptScreen } from './components/ApiKeyPromptScreen';
-import { SettingsModal } from './components/SettingsModal';
 // SERVICE AND TYPE IMPORTS remain the same if they are still located
-// in the same relative position (e.g., '/geminiService' and '../types'):
-import { getDiagnostics } from '../geminiService';
+// in the same relative position (e.g., '../geminiService' and '../types'):
+import { getDiagnostics } from './geminiService';
 import type { UploadedFile, HistoryEntry, ErrorState } from '../types';
 
 const STORAGE_KEY = 'rotorwise_ai_history';
-const API_KEY_STORAGE_KEY = 'rotorwise_ai_gemini_api_key';
 type ViewState = 'welcome' | 'loading' | 'error' | 'report';
 
 const App: React.FC = () => {
@@ -29,8 +26,6 @@ const App: React.FC = () => {
   const [error, setError] = useState<ErrorState>(null);
   const [isHistoryVisible, setIsHistoryVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [apiKey, setApiKey] = useState<string | null>(null);
-  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
 
   // History State
   const [history, setHistory] = useState<HistoryEntry[]>([]);
@@ -40,14 +35,6 @@ const App: React.FC = () => {
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const lastUserInput = useRef('');
   const lastUserVin = useRef('');
-
-  useEffect(() => {
-    // Load API key from local storage on initial render
-    const storedApiKey = localStorage.getItem(API_KEY_STORAGE_KEY);
-    if (storedApiKey) {
-      setApiKey(storedApiKey);
-    }
-  }, []);
 
   useEffect(() => {
     try {
@@ -92,18 +79,6 @@ const App: React.FC = () => {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
   }, [view, selectedHistoryId]);
-
-
-  const handleSaveApiKey = (newApiKey: string) => {
-    if (newApiKey) {
-      localStorage.setItem(API_KEY_STORAGE_KEY, newApiKey);
-      setApiKey(newApiKey);
-      setIsSettingsModalOpen(false);
-    } else {
-      localStorage.removeItem(API_KEY_STORAGE_KEY);
-      setApiKey(null);
-    }
-  };
 
   const fileToBase64 = (file: File): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -178,7 +153,7 @@ const App: React.FC = () => {
   };
 
   const handleSubmit = async (currentInput: string, currentVin: string) => {
-    if (!currentInput.trim() || !apiKey) return;
+    if (!currentInput.trim()) return;
     
     lastUserInput.current = currentInput;
     lastUserVin.current = currentVin;
@@ -191,7 +166,7 @@ const App: React.FC = () => {
     try {
       const completedFiles = files.filter(f => f.status === 'complete' && f.base64);
       const fileData = completedFiles.map(f => ({ base64: f.base64!, mimeType: f.mimeType }));
-      const result = await getDiagnostics(currentInput, currentVin, fileData, apiKey);
+      const result = await getDiagnostics(currentInput, currentVin, fileData);
       
       const newEntry: HistoryEntry = {
         id: Date.now().toString(),
@@ -217,19 +192,13 @@ const App: React.FC = () => {
       };
 
       if (err instanceof Error) {
-        if (err.message.includes('API key not valid')) {
+        if (err.message === 'INVALID_API_KEY' || err.message.toLowerCase().includes('api key not valid')) {
             errorDetails = {
-              title: 'Invalid API Key',
-              message: 'Your API key is invalid or missing permissions. Please correct it in the settings and try again.'
+              title: 'API Key Error',
+              message: 'The configured API key is invalid or missing necessary permissions. Please check your configuration.'
             };
         } else {
             switch (err.message) {
-              case 'INVALID_API_KEY':
-                errorDetails = {
-                  title: 'Invalid API Key',
-                  message: 'Your API key is invalid or missing permissions. Please correct it in the settings and try again.'
-                };
-                break;
               case 'RATE_LIMITED':
                 errorDetails = {
                   title: 'Rate Limit Exceeded',
@@ -335,30 +304,10 @@ const App: React.FC = () => {
     return null;
   };
 
-  if (!apiKey) {
-    return (
-        <>
-            <ApiKeyPromptScreen onOpenSettings={() => setIsSettingsModalOpen(true)} />
-            <SettingsModal 
-                isOpen={isSettingsModalOpen}
-                onClose={() => setIsSettingsModalOpen(false)}
-                onSave={handleSaveApiKey}
-                currentKey={apiKey}
-            />
-        </>
-    );
-  }
-
   return (
     <div className="bg-brand-bg min-h-screen text-brand-text-primary font-sans">
-      <SettingsModal 
-          isOpen={isSettingsModalOpen}
-          onClose={() => setIsSettingsModalOpen(false)}
-          onSave={handleSaveApiKey}
-          currentKey={apiKey}
-      />
       <div className="container mx-auto max-w-screen-2xl h-[var(--viewport-height,100vh)] max-h-[var(--viewport-height,100vh)] flex flex-col">
-        <Header onToggleHistory={() => setIsHistoryVisible(true)} onOpenSettings={() => setIsSettingsModalOpen(true)} />
+        <Header onToggleHistory={() => setIsHistoryVisible(true)} />
         <div className="flex-grow flex gap-4 md:gap-6 min-h-0 relative p-4 md:p-6 md:pt-0">
           {/* Mobile History Panel Overlay */}
           <div className={`fixed lg:hidden top-0 left-0 h-full w-80 z-50 transition-transform duration-300 ease-in-out ${isHistoryVisible ? 'translate-x-0' : '-translate-x-full'}`}>
