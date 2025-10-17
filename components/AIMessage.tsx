@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { RotorIcon } from './icons';
 import { LoadingIndicator } from './LoadingIndicator';
@@ -32,7 +31,7 @@ export const AIMessage: React.FC<AIMessageProps> = ({ children, isLoading, messa
             </div>
             <div className="flex-grow max-w-2xl w-full">
                 <div className="font-bold text-brand-text-primary mb-2">RotorWise AI</div>
-                <div className={`p-4 rounded-lg rounded-tl-none ${hasError ? 'bg-brand-red/10 border border-brand-red/30' : 'bg-brand-surface-hover'}`}>
+                <div className={`p-4 rounded-lg rounded-tl-none ${hasError ? 'bg-red-500/10 border border-red-500/30' : 'bg-brand-surface-hover'}`}>
                     {content}
                 </div>
             </div>

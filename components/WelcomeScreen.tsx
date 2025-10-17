@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { RotorIcon } from './icons';
 
@@ -17,7 +16,7 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onExampleSelect })
   return (
     <div className="flex flex-col items-center justify-center h-full text-center p-4 animate-fade-in">
         <RotorIcon className="w-24 h-24 text-brand-accent" />
-        <h1 className="mt-6 text-3xl font-bold text-brand-text-primary">Hi, I'm RotorWise AI</h1>
+        <h1 className="mt-6 text-3xl font-bold text-brand-text-primary">Welcome to RotorWise AI</h1>
         <p className="mt-2 max-w-2xl text-brand-text-secondary">
             I can help diagnose issues with your vehicle. Describe the problem using the form below to get started.
         </p>

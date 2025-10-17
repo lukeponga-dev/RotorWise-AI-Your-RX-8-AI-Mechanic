@@ -1,6 +1,6 @@
 import React from 'react';
 import type { UploadedFile } from '../types';
-import { SpinnerIcon, XMarkIcon, VideoCameraIcon, ExclamationCircleIcon, PhotoIcon, DocumentIcon } from './icons';
+import { SpinnerIcon, XMarkIcon, VideoCameraIcon, ExclamationCircleIcon, PhotoIcon, DocumentIcon, CheckCircleIcon } from './icons';
 
 interface FilePreviewProps {
     file: UploadedFile;
@@ -9,71 +9,63 @@ interface FilePreviewProps {
 
 export const FilePreview: React.FC<FilePreviewProps> = ({ file, onRemove }) => {
 
-    const renderPreview = () => {
+    const getFileIcon = () => {
         switch (file.type) {
             case 'image':
-                return (
-                    <>
-                        <img src={file.previewUrl} alt={file.name} className="w-full h-full object-cover" />
-                        <div className="absolute bottom-1 right-1 bg-black/50 p-0.5 rounded">
-                            <PhotoIcon className="w-3 h-3 text-white" />
-                        </div>
-                    </>
-                );
+                return <PhotoIcon className="w-6 h-6 text-brand-text-secondary flex-shrink-0" />;
             case 'video':
-                return (
-                    <>
-                        <video src={file.previewUrl} preload="metadata" className="w-full h-full object-cover" muted playsInline />
-                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                            <VideoCameraIcon className="w-6 h-6 text-white" />
-                        </div>
-                    </>
-                );
-            case 'other':
-                return (
-                    <div className="w-full h-full flex items-center justify-center bg-brand-surface-hover-2">
-                        <DocumentIcon className="w-8 h-8 text-brand-text-secondary" />
-                    </div>
-                );
+                return <VideoCameraIcon className="w-6 h-6 text-brand-text-secondary flex-shrink-0" />;
             default:
-                return null;
+                return <DocumentIcon className="w-6 h-6 text-brand-text-secondary flex-shrink-0" />;
         }
     };
 
-    const renderOverlay = () => {
+    const getStatusIndicator = () => {
         switch (file.status) {
             case 'uploading':
-                return (
-                    <div className="absolute inset-0 bg-brand-surface/70 flex items-center justify-center">
-                        <SpinnerIcon className="w-6 h-6 text-brand-text-primary animate-spin" />
-                    </div>
-                );
-            case 'error':
-                return (
-                    <div className="absolute inset-0 bg-brand-red/70 flex flex-col items-center justify-center text-center p-1">
-                        <ExclamationCircleIcon className="w-6 h-6 text-white" />
-                        <span className="text-xs text-white font-semibold mt-1">Error</span>
-                    </div>
-                );
+                return <SpinnerIcon className="w-5 h-5 text-brand-accent animate-spin" />;
             case 'complete':
+                return <CheckCircleIcon className="w-5 h-5 text-emerald-400" />;
+            case 'error':
+                return <ExclamationCircleIcon className="w-5 h-5 text-brand-red" />;
             default:
                 return null;
         }
     };
+    
+    const getStatusText = () => {
+        switch (file.status) {
+            case 'uploading':
+                return 'Processing...';
+            case 'complete':
+                return 'Ready';
+            case 'error':
+                return 'Upload failed';
+            default:
+                return '';
+        }
+    }
 
     return (
-        <div className="relative group w-20 h-20 rounded-lg bg-brand-surface-hover overflow-hidden border border-brand-border">
-            {renderPreview()}
-            {renderOverlay()}
-            
-            <button
-                type="button"
-                onClick={onRemove}
-                className="absolute -top-1.5 -right-1.5 bg-brand-surface-hover-2 border border-brand-border rounded-full p-0.5 text-brand-text-secondary hover:text-brand-text-primary hover:bg-brand-red/50 transition-all duration-200"
-                aria-label={`Remove ${file.name}`}
-            >
-                <XMarkIcon className="w-4 h-4" />
-            </button>
+        <div className="flex items-center gap-3 p-2 rounded-lg bg-brand-surface-hover border border-brand-border animate-fade-in">
+            {getFileIcon()}
+            <div className="flex-grow min-w-0">
+                <p className="text-sm font-medium text-brand-text-primary truncate">{file.name}</p>
+                <p className={`text-xs ${file.status === 'error' ? 'text-brand-red' : 'text-brand-text-secondary'}`}>
+                    {getStatusText()}
+                </p>
+            </div>
+            <div className="flex-shrink-0 flex items-center gap-2">
+                {getStatusIndicator()}
+                <button
+                    type="button"
+                    onClick={onRemove}
+                    className="p-1 rounded-full text-brand-text-secondary hover:bg-brand-surface-hover-2 hover:text-brand-text-primary transition-colors"
+                    aria-label={`Remove ${file.name}`}
+                >
+                    <XMarkIcon className="w-4 h-4" />
+                </button>
+            </div>
         </div>
     );
 };

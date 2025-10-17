@@ -4,18 +4,18 @@ import { ChevronRightIcon, WarningIcon } from './icons';
 
 const getLikelihoodClass = (likelihood: PossibleCause['likelihood']) => {
     switch (likelihood) {
-        case 'High': return 'bg-brand-red/20 text-brand-red';
-        case 'Medium': return 'bg-yellow-500/20 text-yellow-400';
-        case 'Low': return 'bg-green-500/20 text-green-400';
+        case 'High': return 'bg-red-500/20 text-red-400';
+        case 'Medium': return 'bg-amber-500/20 text-amber-400';
+        case 'Low': return 'bg-emerald-500/20 text-emerald-400';
         default: return 'bg-brand-surface-hover text-brand-text-secondary';
     }
 }
 
 const getDifficultyClass = (difficulty: RecommendedAction['difficulty']) => {
     switch (difficulty) {
-        case 'DIY': return 'bg-green-500/20 text-green-400';
-        case 'Intermediate': return 'bg-yellow-500/20 text-yellow-400';
-        case 'Professional': return 'bg-brand-red/20 text-brand-red';
+        case 'DIY': return 'bg-emerald-500/20 text-emerald-400';
+        case 'Intermediate': return 'bg-amber-500/20 text-amber-400';
+        case 'Professional': return 'bg-red-500/20 text-red-400';
         default: return 'bg-brand-surface-hover text-brand-text-secondary';
     }
 }
@@ -100,11 +100,11 @@ export const ReportDisplay: React.FC<ReportDisplayProps> = ({ report }) => {
         )}
         
         {/* Safety Warning */}
-        <div className="p-4 bg-brand-red/10 border border-brand-red/30 rounded-lg flex items-start gap-3">
+        <div className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg flex items-start gap-3">
             <WarningIcon className="w-6 h-6 text-brand-red flex-shrink-0 mt-0.5" />
             <div>
                 <h3 className="font-bold text-brand-red">Safety Warning</h3>
-                <p className="mt-1 text-red-200/90 text-sm">{report.safetyWarning}</p>
+                <p className="mt-1 text-red-300 text-sm">{report.safetyWarning}</p>
             </div>
         </div>
     </div>

@@ -2,8 +2,6 @@
 import { GoogleGenAI, Type, GenerateContentParameters } from "@google/genai";
 import type { DiagnosticReport } from '../types';
 
-// The GoogleGenAI client will be initialized inside the function.
-
 const responseSchema = {
     type: Type.OBJECT,
     properties: {
@@ -85,13 +83,13 @@ const responseSchema = {
 export const getDiagnostics = async (
     userInput: string,
     vin: string,
-    files: { base64: string, mimeType: string }[]
+    files: { base64: string, mimeType: string }[],
+    apiKey: string
 ): Promise<DiagnosticReport> => {
     
-    // Fix: Initialize the GoogleGenAI client inside the function to use the latest API key.
-    const ai = new GoogleGenAI({ apiKey: process.env.API_KEY! });
+    const ai = new GoogleGenAI({ apiKey });
 
-    const systemInstruction = `You are "RotorWise AI", an expert automotive diagnostic assistant. Your goal is to provide a comprehensive, accurate, and safe diagnostic report based on user-provided information.
+    const systemInstruction = `You are "RotorWise AI", an expert automotive diagnostic assistant for all types of vehicles. Your goal is to provide a comprehensive, accurate, and safe diagnostic report based on user-provided information.
     
     Follow these instructions carefully:
     1.  Analyze the user's description of the problem, any provided VIN, and any uploaded media (images/videos).
@@ -148,7 +146,7 @@ export const getDiagnostics = async (
         console.error("Error calling Gemini API:", error);
         if (error instanceof Error) {
             const message = error.message.toLowerCase();
-            if (message.includes('api key not valid') || message.includes('requested entity was not found')) {
+            if (message.includes('api key not valid')) {
                 throw new Error('INVALID_API_KEY');
             }
             if (message.includes('rate limit')) {
