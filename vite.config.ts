@@ -7,9 +7,9 @@ export default defineConfig(({ mode }) => {
 
   return {
     server: {
-      port: 3000,
+      port: 3001,
       host: '0.0.0.0',
-      allowedHosts: 'all', // ✅ Accept requests from any host
+      allowedHosts: ['rx8chatbot.onrender.com'], // 👈 Explicitly allow this host
     },
     plugins: [react()],
     define: {
