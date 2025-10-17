@@ -1,6 +1,6 @@
 import React from 'react';
 import type { UploadedFile } from '../types';
-import { SpinnerIcon, XMarkIcon, VideoCameraIcon, ExclamationCircleIcon } from './icons';
+import { SpinnerIcon, XMarkIcon, VideoCameraIcon, ExclamationCircleIcon, PhotoIcon, DocumentIcon } from './icons';
 
 interface FilePreviewProps {
     file: UploadedFile;
@@ -10,22 +10,34 @@ interface FilePreviewProps {
 export const FilePreview: React.FC<FilePreviewProps> = ({ file, onRemove }) => {
 
     const renderPreview = () => {
-        if (file.type === 'image') {
-            return <img src={file.previewUrl} alt={file.name} className="w-full h-full object-cover" />;
-        }
-        if (file.type === 'video') {
-            // Use a video tag to show the first frame. `preload="metadata"` is efficient.
-            return (
-                <>
-                    <video src={file.previewUrl} preload="metadata" className="w-full h-full object-cover" muted playsInline />
-                    <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                        <VideoCameraIcon className="w-6 h-6 text-white" />
+        switch (file.type) {
+            case 'image':
+                return (
+                    <>
+                        <img src={file.previewUrl} alt={file.name} className="w-full h-full object-cover" />
+                        <div className="absolute bottom-1 right-1 bg-black/50 p-0.5 rounded">
+                            <PhotoIcon className="w-3 h-3 text-white" />
+                        </div>
+                    </>
+                );
+            case 'video':
+                return (
+                    <>
+                        <video src={file.previewUrl} preload="metadata" className="w-full h-full object-cover" muted playsInline />
+                        <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                            <VideoCameraIcon className="w-6 h-6 text-white" />
+                        </div>
+                    </>
+                );
+            case 'other':
+                return (
+                    <div className="w-full h-full flex items-center justify-center bg-brand-surface-hover-2">
+                        <DocumentIcon className="w-8 h-8 text-brand-text-secondary" />
                     </div>
-                </>
-            )
+                );
+            default:
+                return null;
         }
-        // Fallback for other file types if ever needed
-        return null;
     };
 
     const renderOverlay = () => {

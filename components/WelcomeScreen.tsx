@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { RotorIcon } from './icons';
 
@@ -16,12 +17,12 @@ export const WelcomeScreen: React.FC<WelcomeScreenProps> = ({ onExampleSelect })
   return (
     <div className="flex flex-col items-center justify-center h-full text-center p-4 animate-fade-in">
         <RotorIcon className="w-24 h-24 text-brand-accent" />
-        <h1 className="mt-6 text-3xl font-bold text-brand-text-primary">Welcome to RotorWise AI</h1>
+        <h1 className="mt-6 text-3xl font-bold text-brand-text-primary">Hi, I'm RotorWise AI</h1>
         <p className="mt-2 max-w-2xl text-brand-text-secondary">
-            Your expert automotive diagnostic assistant. Describe your vehicle's problem, upload a photo or video, and get a detailed report in minutes.
+            I can help diagnose issues with your vehicle. Describe the problem using the form below to get started.
         </p>
         <div className="mt-8 w-full max-w-3xl">
-            <h2 className="text-lg font-semibold text-brand-text-primary">Try an example:</h2>
+            <h2 className="text-lg font-semibold text-brand-text-primary">Or, start with an example problem:</h2>
             <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-3">
                 {examplePrompts.map((prompt, index) => (
                     <button

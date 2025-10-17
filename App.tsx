@@ -1,13 +1,14 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useRef } from 'react';
 import { DiagnosticForm } from './components/DiagnosticForm';
 import { Header } from './components/Header';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { ReportDisplay } from './components/ReportDisplay';
 import { HistoryPanel } from './components/HistoryPanel';
 import { getDiagnostics } from './services/geminiService';
-import type { UploadedFile, HistoryEntry } from './types';
-import { ErrorDisplay } from './components/ErrorDisplay';
-import { LoadingIndicator } from './components/LoadingIndicator';
+import type { UploadedFile, HistoryEntry, ErrorState } from './types';
+import { UserMessage } from './components/UserMessage';
+import { AIMessage } from './components/AIMessage';
 
 // Add types for aistudio window object
 declare global {
@@ -23,11 +24,6 @@ declare global {
 
 const STORAGE_KEY = 'rotorwise_ai_history';
 type ViewState = 'welcome' | 'loading' | 'error' | 'report';
-
-type ErrorState = {
-  title: string;
-  message: string;
-} | null;
 
 const App: React.FC = () => {
   // Form State
@@ -46,6 +42,11 @@ const App: React.FC = () => {
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [selectedHistoryId, setSelectedHistoryId] = useState<string | null>(null);
 
+  // Refs for chat behavior
+  const chatContainerRef = useRef<HTMLDivElement>(null);
+  const lastUserInput = useRef('');
+  const lastUserVin = useRef('');
+
   useEffect(() => {
     const checkApiKey = async () => {
       if (window.aistudio) {
@@ -62,11 +63,6 @@ const App: React.FC = () => {
       if (storedHistory) {
         const parsedHistory: HistoryEntry[] = JSON.parse(storedHistory);
         setHistory(parsedHistory);
-        if (parsedHistory.length > 0) {
-          const lastEntry = parsedHistory[parsedHistory.length - 1];
-          setSelectedHistoryId(lastEntry.id);
-          setView('report');
-        }
       }
     } catch (e) {
       console.error("Failed to load history from localStorage", e);
@@ -74,7 +70,6 @@ const App: React.FC = () => {
   }, []);
   
   useEffect(() => {
-    // This effect handles the resizing of the viewport when the virtual keyboard appears on mobile devices.
     const setViewportHeight = () => {
       if (window.visualViewport) {
         document.documentElement.style.setProperty('--viewport-height', `${window.visualViewport.height}px`);
@@ -98,11 +93,18 @@ const App: React.FC = () => {
       console.error("Failed to save history to localStorage", e);
     }
   }, [history]);
+  
+  useEffect(() => {
+    // Scroll to the bottom of the chat when new content is added
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [view, selectedHistoryId]);
+
 
   const handleSelectApiKey = async () => {
     if (window.aistudio) {
       await window.aistudio.openSelectKey();
-      // Optimistically assume the key is selected to avoid race conditions.
       setApiKeyReady(true);
     }
   };
@@ -123,8 +125,6 @@ const App: React.FC = () => {
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!event.target.files) return;
 
-    // Fix: Explicitly type `newFiles` as `File[]`. This resolves TypeScript
-    // inference issues where `file` objects were being treated as `unknown`.
     const newFiles: File[] = Array.from(event.target.files);
     const availableSlots = 5 - files.length;
 
@@ -188,9 +188,13 @@ const App: React.FC = () => {
       await handleSelectApiKey();
     }
 
+    lastUserInput.current = currentInput;
+    lastUserVin.current = currentVin;
+    
     setIsLoading(true);
     setView('loading');
     setError(null);
+    setSelectedHistoryId(null); // Deselect history to show the loading state for the new query
 
     try {
       const completedFiles = files.filter(f => f.status === 'complete' && f.base64);
@@ -262,9 +266,8 @@ const App: React.FC = () => {
     setVin('');
     setFiles([]);
     setSelectedHistoryId(null);
-    setView('report'); // Change view to allow form to be visible
+    setView('welcome');
     setTimeout(() => {
-        // A small timeout helps ensure the input is focused correctly after the state update
         const input = document.getElementById('problem-input');
         if (input) input.focus();
     }, 100);
@@ -277,6 +280,8 @@ const App: React.FC = () => {
     setFiles([]);
     setError(null);
     setSelectedHistoryId(null);
+    lastUserInput.current = '';
+    lastUserVin.current = '';
     setView('welcome');
     setIsHistoryVisible(false);
   };
@@ -296,36 +301,40 @@ const App: React.FC = () => {
   const currentHistoryEntry = history.find(entry => entry.id === selectedHistoryId);
   const loadingMessage = files.filter(f => f.status === 'complete').length > 0 ? 'Processing media and analyzing symptoms' : 'Analyzing symptoms';
 
-  const renderMainContent = () => {
-    switch (view) {
-        case 'loading':
-            return <LoadingIndicator message={loadingMessage} />;
-        case 'error':
-            return <ErrorDisplay details={error!} />;
-        case 'report':
-            if (currentHistoryEntry) {
-                return (
-                    <div className="space-y-6">
-                        <div className="bg-brand-surface/50 p-4 rounded-lg border border-brand-border">
-                        <p className="text-sm text-brand-text-secondary">
-                            <span className="font-bold text-brand-text-primary">Diagnosis for:</span> {currentHistoryEntry.userInput}
-                        </p>
-                        {currentHistoryEntry.vin && <p className="text-sm text-brand-text-secondary mt-1">
-                            <span className="font-bold text-brand-text-primary">VIN:</span> {currentHistoryEntry.vin}
-                        </p>}
-                        {currentHistoryEntry.files.length > 0 && <p className="text-sm text-brand-text-secondary mt-1">
-                            <span className="font-bold text-brand-text-primary">Files:</span> {currentHistoryEntry.files.map(f => f.name).join(', ')}
-                        </p>}
-                        </div>
-                        <ReportDisplay report={currentHistoryEntry.report} />
-                    </div>
-                );
-            }
-            // Fallthrough to welcome if no report is selected
-        case 'welcome':
-        default:
-            return <WelcomeScreen onExampleSelect={handleExampleSelect} />;
+  const renderChatContent = () => {
+    if (view === 'report' && currentHistoryEntry) {
+      return (
+        <>
+          <UserMessage entry={currentHistoryEntry} />
+          <AIMessage>
+            <ReportDisplay report={currentHistoryEntry.report} />
+          </AIMessage>
+        </>
+      );
     }
+
+    if (view === 'loading' || view === 'error') {
+      const submittedEntry = {
+        userInput: lastUserInput.current,
+        vin: lastUserVin.current,
+        files: files.map(f => ({ name: f.name, mimeType: f.mimeType })),
+      };
+
+      return (
+        <>
+          <UserMessage entry={submittedEntry} />
+          {view === 'loading' && <AIMessage isLoading={true} message={loadingMessage} />}
+          {view === 'error' && error && <AIMessage hasError={true} errorDetails={error} />}
+        </>
+      );
+    }
+    
+    // Default welcome state, shown only when no history is selected
+    if (!selectedHistoryId) {
+        return <WelcomeScreen onExampleSelect={handleExampleSelect} />;
+    }
+
+    return null;
   };
 
   return (
@@ -345,8 +354,8 @@ const App: React.FC = () => {
           </div>
 
           <main className="flex-grow h-full flex flex-col bg-brand-surface rounded-xl border border-brand-border overflow-hidden">
-             <div className="flex-grow overflow-y-auto p-4 md:p-6">
-                {renderMainContent()}
+             <div ref={chatContainerRef} className="flex-grow overflow-y-auto p-4 md:p-6 space-y-6">
+                {renderChatContent()}
              </div>
              <div className="flex-shrink-0 p-3 md:p-4 bg-brand-surface/80 backdrop-blur-sm border-t border-brand-border">
                 <DiagnosticForm 

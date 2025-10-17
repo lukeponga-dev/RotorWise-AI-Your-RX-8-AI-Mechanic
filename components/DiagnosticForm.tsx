@@ -24,6 +24,7 @@ export const DiagnosticForm: React.FC<DiagnosticFormProps> = ({
 }) => {
     const [userInput, setUserInput] = useState(initialUserInput);
     const [vin, setVin] = useState(initialVin);
+    const [vinError, setVinError] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const hasUploadingFiles = files.some(f => f.status === 'uploading');
 
@@ -35,9 +36,35 @@ export const DiagnosticForm: React.FC<DiagnosticFormProps> = ({
         setVin(initialVin);
     }, [initialVin]);
 
+    const handleVinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value.toUpperCase();
+        setVin(value);
+
+        // An empty VIN is valid as it's optional
+        if (value === '') {
+            setVinError(null);
+            return;
+        }
+
+        // Check for invalid characters first
+        if (!/^[A-Z0-9]*$/.test(value)) {
+            setVinError('VIN can only contain letters and numbers.');
+            return;
+        }
+
+        // Check for length
+        if (value.length !== 17) {
+            setVinError('VIN must be exactly 17 characters long.');
+            return;
+        }
+        
+        // If all checks pass
+        setVinError(null);
+    };
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (isLoading || !userInput.trim() || hasUploadingFiles) return;
+        if (isLoading || !userInput.trim() || hasUploadingFiles || !!vinError) return;
         onSubmit(userInput, vin);
     };
 
@@ -56,21 +83,14 @@ export const DiagnosticForm: React.FC<DiagnosticFormProps> = ({
             )}
             <div className="flex flex-col md:flex-row items-start gap-3">
                  {/* Inputs container */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full md:flex-grow">
-                    <input
-                        type="text"
-                        value={vin}
-                        onChange={(e) => setVin(e.target.value)}
-                        placeholder="VIN (Optional)"
-                        className="w-full bg-brand-surface-hover rounded-xl h-11 px-4 text-sm text-brand-text-primary focus:outline-none focus:ring-2 focus:ring-brand-accent transition-all"
-                    />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 w-full md:flex-grow">
                     <textarea
                         id="problem-input"
                         value={userInput}
                         onChange={(e) => setUserInput(e.target.value)}
                         placeholder="Describe the problem with your vehicle..."
                         rows={1}
-                        className="w-full bg-brand-surface-hover rounded-xl h-11 px-4 py-2.5 text-sm text-brand-text-primary focus:outline-none focus:ring-2 focus:ring-brand-accent transition-all resize-none"
+                        className="w-full bg-brand-surface-hover rounded-xl h-11 px-4 py-2.5 text-sm text-brand-text-primary focus:outline-none focus:ring-2 focus:ring-brand-accent transition-all resize-none md:col-span-2"
                         onKeyDown={(e) => {
                             if (e.key === 'Enter' && !e.shiftKey) {
                                 e.preventDefault();
@@ -79,10 +99,23 @@ export const DiagnosticForm: React.FC<DiagnosticFormProps> = ({
                         }}
                         disabled={isLoading}
                     />
+                    <div>
+                        <input
+                            type="text"
+                            value={vin}
+                            onChange={handleVinChange}
+                            placeholder="VIN (Optional)"
+                            className={`w-full bg-brand-surface-hover rounded-xl h-11 px-4 text-sm text-brand-text-primary focus:outline-none focus:ring-2 transition-all ${vinError ? 'ring-brand-red' : 'focus:ring-brand-accent'}`}
+                            maxLength={17}
+                            aria-invalid={!!vinError}
+                            aria-describedby={vinError ? "vin-error" : undefined}
+                        />
+                         {vinError && <p id="vin-error" className="text-xs text-brand-red mt-1 px-1">{vinError}</p>}
+                    </div>
                 </div>
                 
                 {/* Buttons container */}
-                <div className="flex items-center gap-2 self-end md:self-start">
+                <div className="flex items-center gap-2 w-full justify-end md:w-auto md:self-start">
                     <input
                         type="file"
                         multiple
@@ -103,7 +136,7 @@ export const DiagnosticForm: React.FC<DiagnosticFormProps> = ({
                     </button>
                     <button
                         type="submit"
-                        disabled={isLoading || !userInput.trim() || hasUploadingFiles}
+                        disabled={isLoading || !userInput.trim() || hasUploadingFiles || !!vinError}
                         className="p-3 h-11 rounded-xl bg-brand-accent hover:bg-brand-accent-hover disabled:bg-brand-accent/50 disabled:cursor-not-allowed transition-colors"
                         aria-label="Submit diagnosis"
                     >

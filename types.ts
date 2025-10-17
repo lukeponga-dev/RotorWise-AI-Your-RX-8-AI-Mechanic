@@ -38,3 +38,8 @@ export interface HistoryEntry {
   files: { name: string; mimeType: string }[];
   report: DiagnosticReport;
 }
+
+export type ErrorState = {
+  title: string;
+  message: string;
+} | null;
