@@ -10,7 +10,7 @@ import { AIMessage } from './components/AIMessage';
 import { ApiKeyPromptScreen } from './components/ApiKeyPromptScreen';
 import { SettingsModal } from './components/SettingsModal';
 // SERVICE AND TYPE IMPORTS remain the same if they are still located
-// in the same relative position (e.g., '../geminiService' and '../types'):
+// in the same relative position (e.g., './geminiService' and '../types'):
 import { getDiagnostics } from '../geminiService';
 import type { UploadedFile, HistoryEntry, ErrorState } from '../types';
 
