@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RotaryAI – Your RX-8 AI Mechanic</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Tailwind CSS Configuration -->
+    <script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    brand: {
+                        bg: '#0D1117',
+                        surface: '#161B22',
+                        'surface-hover': '#1F242C',
+                        'surface-hover-2': '#2A3038',
+                        border: '#30363D',
+                        accent: '#F97316', // A nice orange for a mechanic theme
+                        'accent-hover': '#EA580C',
+                        red: '#F87171',
+                        text: {
+                            primary: '#E6EDF3',
+                            secondary: '#8B949E',
+                        },
+                    },
+                },
+                fontFamily: {
+                    sans: ['Inter', 'sans-serif'],
+                },
+                keyframes: {
+                    'fade-in': {
+                        '0%': { opacity: '0', transform: 'translateY(10px)' },
+                        '100%': { opacity: '1', transform: 'translateY(0)' },
+                    },
+                },
+                animation: {
+                    'fade-in': 'fade-in 0.5s ease-out forwards',
+                }
+            },
+        },
+    };
+    </script>
+    
+    <!-- Custom Base Styles for Tailwind -->
+    <style type="text/tailwindcss">
+        @layer base {
+            body {
+                @apply bg-brand-bg text-brand-text-primary antialiased;
+            }
+            /* Custom scrollbar for a more integrated look */
+            ::-webkit-scrollbar {
+                width: 8px;
+            }
+            ::-webkit-scrollbar-track {
+                background: theme('colors.brand.surface');
+            }
+            ::-webkit-scrollbar-thumb {
+                background: theme('colors.brand.border');
+                border-radius: 4px;
+            }
+            ::-webkit-scrollbar-thumb:hover {
+                background: theme('colors.brand.text.secondary');
+            }
+        }
+    </style>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Import Map -->
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://aistudiocdn.com/react@^19.2.0",
+        "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+        "react/": "https://aistudiocdn.com/react@^19.2.0/",
+        "@google/genai": "https://aistudiocdn.com/@google/genai@^1.25.0"
+      }
+    }
+    </script>
+</head>
+<body>
+    <div id="root"></div>
+    <!-- Main application script -->
+    <script type="module" src="/index.tsx"></script>
+</body>
+</html>

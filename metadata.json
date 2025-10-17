@@ -1,0 +1,5 @@
+{
+  "name": "RotaryAI – Your RX-8 AI Mechanic",
+  "description": "RotaryAI is the first AI-powered diagnostic assistant built exclusively for Mazda RX-8 owners. Powered by the Google Gemini API and grounded in official workshop manuals, it helps you troubleshoot, diagnose, and understand your Renesis rotary engine with confidence.",
+  "requestFramePermissions": []
+}
