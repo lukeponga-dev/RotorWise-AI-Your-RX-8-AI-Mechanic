@@ -1,15 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
+// RENAMED IMPORTS TO USE THE 'components/' FOLDER:
 import { DiagnosticForm } from './components/DiagnosticForm';
 import { Header } from './components/Header';
 import { WelcomeScreen } from './components/WelcomeScreen';
 import { ReportDisplay } from './components/ReportDisplay';
 import { HistoryPanel } from './components/HistoryPanel';
-import { getDiagnostics } from './services/geminiService';
-import type { UploadedFile, HistoryEntry, ErrorState } from './types';
 import { UserMessage } from './components/UserMessage';
 import { AIMessage } from './components/AIMessage';
 import { ApiKeyPromptScreen } from './components/ApiKeyPromptScreen';
 import { SettingsModal } from './components/SettingsModal';
+// SERVICE AND TYPE IMPORTS remain the same if they are still located
+// in the same relative position (e.g., '../geminiService' and '../types'):
+import { getDiagnostics } from '../geminiService';
+import type { UploadedFile, HistoryEntry, ErrorState } from '../types';
 
 const STORAGE_KEY = 'rotorwise_ai_history';
 const API_KEY_STORAGE_KEY = 'rotorwise_ai_gemini_api_key';
@@ -301,7 +304,7 @@ const App: React.FC = () => {
       return (
         <>
           <UserMessage entry={currentHistoryEntry} />
-          <AIMessage>
+          <AIMessage report={currentHistoryEntry.report}>
             <ReportDisplay report={currentHistoryEntry.report} />
           </AIMessage>
         </>

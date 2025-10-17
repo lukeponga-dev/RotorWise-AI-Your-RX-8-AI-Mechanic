@@ -1,8 +1,8 @@
-import React from 'react';
-import { RotorIcon } from './icons';
+import React, { useState, useEffect, useRef } from 'react';
+import { RotorIcon, SpeakerWaveIcon, PauseIcon, PlayIcon } from './icons';
 import { LoadingIndicator } from './LoadingIndicator';
 import { ErrorDisplay } from './ErrorDisplay';
-import type { ErrorState } from '../types';
+import type { ErrorState, DiagnosticReport } from '../types';
 
 interface AIMessageProps {
     children?: React.ReactNode;
@@ -10,9 +10,79 @@ interface AIMessageProps {
     message?: string;
     hasError?: boolean;
     errorDetails?: ErrorState;
+    report?: DiagnosticReport;
 }
 
-export const AIMessage: React.FC<AIMessageProps> = ({ children, isLoading, message, hasError, errorDetails }) => {
+const reportToText = (reportData: DiagnosticReport): string => {
+    const parts: string[] = [];
+    parts.push(`Problem Summary: ${reportData.problemSummary}`);
+    if (reportData.observationsFromMedia) {
+        parts.push(`Observations from Media: ${reportData.observationsFromMedia}`);
+    }
+    parts.push("Possible Causes:");
+    reportData.possibleCauses.forEach(c => {
+        parts.push(`${c.likelihood} likelihood: ${c.cause}. ${c.explanation}`);
+    });
+    parts.push("Diagnostic Steps:");
+    reportData.diagnosticSteps.forEach((step, i) => {
+        parts.push(`Step ${i + 1}: ${step}`);
+    });
+    parts.push("Recommended Actions:");
+    reportData.recommendedActions.forEach(a => {
+        parts.push(`${a.action}, which is a ${a.difficulty} task.`);
+    });
+    if (reportData.requiredPartsAndTools && reportData.requiredPartsAndTools.length > 0) {
+        parts.push(`Required Parts and Tools: ${reportData.requiredPartsAndTools.join(', ')}.`);
+    }
+    parts.push(`Safety Warning: ${reportData.safetyWarning}`);
+    return parts.join('\n\n');
+};
+
+export const AIMessage: React.FC<AIMessageProps> = ({ children, isLoading, message, hasError, errorDetails, report }) => {
+    const [speechState, setSpeechState] = useState<'idle' | 'playing' | 'paused'>('idle');
+    const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
+    const isSpeechSupported = typeof window !== 'undefined' && 'speechSynthesis' in window;
+
+    useEffect(() => {
+        // Stop speech when the component unmounts or the report changes
+        return () => {
+            if (isSpeechSupported) {
+                window.speechSynthesis.cancel();
+            }
+        };
+    }, [report, isSpeechSupported]);
+    
+    const handleToggleSpeech = () => {
+        if (!report || !isSpeechSupported) return;
+
+        if (speechState === 'playing') {
+            window.speechSynthesis.pause();
+        } else if (speechState === 'paused') {
+            window.speechSynthesis.resume();
+        } else { // 'idle'
+            window.speechSynthesis.cancel(); // Cancel any previous utterance
+            
+            const textToSpeak = reportToText(report);
+            const newUtterance = new SpeechSynthesisUtterance(textToSpeak);
+            
+            newUtterance.onstart = () => setSpeechState('playing');
+            newUtterance.onpause = () => setSpeechState('paused');
+            newUtterance.onresume = () => setSpeechState('playing');
+            newUtterance.onend = () => {
+                setSpeechState('idle');
+                utteranceRef.current = null;
+            };
+            newUtterance.onerror = (e) => {
+                console.error("Speech synthesis error", e);
+                setSpeechState('idle');
+                utteranceRef.current = null;
+            };
+
+            utteranceRef.current = newUtterance;
+            window.speechSynthesis.speak(newUtterance);
+        }
+    };
+
     let content = children;
     if (isLoading && message) {
         content = <LoadingIndicator message={message} />;
@@ -23,6 +93,16 @@ export const AIMessage: React.FC<AIMessageProps> = ({ children, isLoading, messa
     if (!content) {
         return null;
     }
+
+    const renderSpeechIcon = () => {
+        switch(speechState) {
+            case 'playing': return <PauseIcon className="w-5 h-5" />;
+            case 'paused': return <PlayIcon className="w-5 h-5" />;
+            case 'idle':
+            default:
+                return <SpeakerWaveIcon className="w-5 h-5" />;
+        }
+    };
     
     return (
         <div className="flex items-start gap-3 animate-fade-in">
@@ -30,7 +110,18 @@ export const AIMessage: React.FC<AIMessageProps> = ({ children, isLoading, messa
                 <RotorIcon className="w-5 h-5 text-white" />
             </div>
             <div className="flex-grow max-w-2xl w-full">
-                <div className="font-bold text-brand-text-primary mb-2">RotorWise AI</div>
+                <div className="flex items-center justify-between mb-2">
+                    <div className="font-bold text-brand-text-primary">RotorWise AI</div>
+                    {isSpeechSupported && report && !isLoading && !hasError && (
+                        <button 
+                            onClick={handleToggleSpeech} 
+                            className="p-2 rounded-md text-brand-text-secondary hover:bg-brand-surface-hover-2 hover:text-brand-text-primary focus:outline-none focus:ring-2 focus:ring-brand-accent"
+                            aria-label={speechState === 'playing' ? 'Pause reading' : speechState === 'paused' ? 'Resume reading' : 'Read aloud'}
+                        >
+                            {renderSpeechIcon()}
+                        </button>
+                    )}
+                </div>
                 <div className={`p-4 rounded-lg rounded-tl-none ${hasError ? 'bg-red-500/10 border border-red-500/30' : 'bg-brand-surface-hover'}`}>
                     {content}
                 </div>
